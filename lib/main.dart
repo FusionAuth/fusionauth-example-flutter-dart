@@ -11,8 +11,7 @@ const FlutterSecureStorage secureStorage = FlutterSecureStorage();
 
 const String FUSION_AUTH_DOMAIN = '1a5321098cb0.ngrok.io';
 const String FUSION_AUTH_CLIENT_ID = '7e3637e8-723a-42d6-9d1d-5cb36128d6f1';
-const String FUSION_AUTH_CLIENT_SECRET =
-    'hQ7s4MJIHIyk7iqbZ0082Q020RT9EZYtfBrah1v3a4A';
+
 const String FUSION_AUTH_REDIRECT_URI =
     'com.fusionauth.flutterdemo://login-callback';
 const String FUSION_AUTH_ISSUER = 'https://$FUSION_AUTH_DOMAIN';
@@ -80,7 +79,6 @@ class _MyAppState extends State<MyApp> {
         AuthorizationTokenRequest(
           FUSION_AUTH_CLIENT_ID,
           FUSION_AUTH_REDIRECT_URI,
-          clientSecret: FUSION_AUTH_CLIENT_SECRET,
           issuer: 'https://$FUSION_AUTH_DOMAIN',
           scopes: <String>['offline_access'],
           // promptValues: ['login']
