@@ -160,10 +160,6 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> logoutAction() async {
     await secureStorage.delete(key: 'refresh_token');
-    const String url = 'https://$FUSION_AUTH_DOMAIN/oauth2/logout?client_id=$FUSION_AUTH_CLIENT_ID';
-    final http.Response response = await http.get(
-      url
-    );
     setState(() {
       isLoggedIn = false;
       isBusy = false;
