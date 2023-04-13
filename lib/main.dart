@@ -178,7 +178,7 @@ class Login extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        RaisedButton(
+        ElevatedButton(
           onPressed: () async {
             await loginAction();
           },
@@ -218,7 +218,7 @@ class Profile extends StatelessWidget {
         const SizedBox(height: 24),
         Text('Name: $name'),
         const SizedBox(height: 48),
-        RaisedButton(
+        ElevatedButton(
           onPressed: () async {
             await logoutAction();
           },
