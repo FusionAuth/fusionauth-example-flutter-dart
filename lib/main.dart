@@ -21,7 +21,7 @@ void main() {
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({Key key}) : super(key: key);
+  const MyApp({Key? key}) : super(key: key);
 
   @override
   _MyAppState createState() => _MyAppState();
@@ -30,9 +30,9 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   bool isBusy = false;
   bool isLoggedIn = false;
-  String errorMessage;
-  String name;
-  String picture;
+  String? errorMessage;
+  String? name;
+  String? picture;
 
   @override
   Widget build(BuildContext context) {
@@ -53,10 +53,9 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  Future<Map<String, Object>> getUserDetails(String accessToken) async {
-    const String url = 'https://$FUSION_AUTH_DOMAIN/oauth2/userinfo';
+  Future<Map<String, dynamic>> getUserDetails(String accessToken) async {
     final http.Response response = await http.get(
-      url,
+      Uri.https(FUSION_AUTH_DOMAIN, 'oauth2/userinfo'),
       headers: <String, String>{'Authorization': 'Bearer $accessToken'},
     );
 
@@ -74,8 +73,7 @@ class _MyAppState extends State<MyApp> {
     });
 
     try {
-      final AuthorizationTokenResponse result =
-          await appAuth.authorizeAndExchangeCode(
+      final AuthorizationTokenResponse? result = await appAuth.authorizeAndExchangeCode(
         AuthorizationTokenRequest(
           FUSION_AUTH_CLIENT_ID,
           FUSION_AUTH_REDIRECT_URI,
@@ -84,27 +82,28 @@ class _MyAppState extends State<MyApp> {
           // promptValues: ['login']
         ),
       );
-      log('data: $result');
-      // final Map<String, Object> idToken = parseIdToken(result.idToken);
-      final Map<String, Object> profile =
-          await getUserDetails(result.accessToken);
+      if (result != null) {
+        log('data: $result');
+        // final Map<String, Object> idToken = parseIdToken(result.idToken);
+        final Map<String, dynamic> profile = await getUserDetails(result.accessToken!);
 
-      debugPrint('response: $profile');
-      await secureStorage.write(
-          key: 'refresh_token', value: result.refreshToken);
-      var gravatar = Gravatar(profile['email']);
-      var url = gravatar.imageUrl(
-        size: 100,
-        defaultImage: GravatarImage.retro,
-        rating: GravatarRating.pg,
-        fileExtension: true,
-      );
-      setState(() {
-        isBusy = false;
-        isLoggedIn = true;
-        name = profile['given_name'];
-        picture = url;
-      });
+        debugPrint('response: $profile');
+        await secureStorage.write(
+            key: 'refresh_token', value: result.refreshToken);
+        var gravatar = Gravatar(profile['email']! as String);
+        var url = gravatar.imageUrl(
+          size: 100,
+          defaultImage: GravatarImage.retro,
+          rating: GravatarRating.pg,
+          fileExtension: true,
+        );
+        setState(() {
+          isBusy = false;
+          isLoggedIn = true;
+          name = profile['given_name']! as String;
+          picture = url;
+        });
+      }
     } on Exception catch (e, s) {
       debugPrint('login error: $e - stack: $s');
 
@@ -117,41 +116,43 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> initAction() async {
-    final String storedRefreshToken =
+    final String? storedRefreshToken =
         await secureStorage.read(key: 'refresh_token');
-    if (storedRefreshToken == null) return;
+    if (storedRefreshToken == null) {
+      return;
+    }
 
     setState(() {
       isBusy = true;
     });
 
     try {
-      final TokenResponse response = await appAuth.token(TokenRequest(
+      final TokenResponse? response = await appAuth.token(TokenRequest(
         FUSION_AUTH_CLIENT_ID,
         FUSION_AUTH_REDIRECT_URI,
         issuer: FUSION_AUTH_ISSUER,
         refreshToken: storedRefreshToken,
       ));
 
-      // final Map<String, Object> idToken = parseIdToken(response.idToken);
-      final Map<String, Object> profile =
-          await getUserDetails(response.accessToken);
+      if (response != null) {
+        // final Map<String, Object> idToken = parseIdToken(response.idToken);
+        final Map<String, dynamic> profile = await getUserDetails(response.accessToken!);
 
-      await secureStorage.write(
-          key: 'refresh_token', value: response.refreshToken);
-      var gravatar = Gravatar(profile['email']);
-      var url = gravatar.imageUrl(
-        size: 100,
-        defaultImage: GravatarImage.retro,
-        rating: GravatarRating.pg,
-        fileExtension: true,
-      );
-      setState(() {
-        isBusy = false;
-        isLoggedIn = true;
-        name = profile['given_name'];
-        picture = url;
-      });
+        await secureStorage.write(key: 'refresh_token', value: response.refreshToken);
+        var gravatar = Gravatar(profile['email']! as String);
+        var url = gravatar.imageUrl(
+          size: 100,
+          defaultImage: GravatarImage.retro,
+          rating: GravatarRating.pg,
+          fileExtension: true,
+        );
+        setState(() {
+          isBusy = false;
+          isLoggedIn = true;
+          name = profile['given_name']! as String;
+          picture = url;
+        });
+      }
     } on Exception catch (e, s) {
       debugPrint('error on refresh token: $e - stack: $s');
       await logoutAction();
@@ -169,16 +170,16 @@ class _MyAppState extends State<MyApp> {
 
 class Login extends StatelessWidget {
   final Future<void> Function() loginAction;
-  final String loginError;
+  final String? loginError;
 
-  const Login(this.loginAction, this.loginError, {Key key}) : super(key: key);
+  const Login(this.loginAction, this.loginError, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
-        RaisedButton(
+        ElevatedButton(
           onPressed: () async {
             await loginAction();
           },
@@ -192,10 +193,10 @@ class Login extends StatelessWidget {
 
 class Profile extends StatelessWidget {
   final Future<void> Function() logoutAction;
-  final String name;
-  final String picture;
+  final String? name;
+  final String? picture;
 
-  const Profile(this.logoutAction, this.name, this.picture, {Key key})
+  const Profile(this.logoutAction, this.name, this.picture, {Key? key})
       : super(key: key);
 
   @override
@@ -209,16 +210,16 @@ class Profile extends StatelessWidget {
           decoration: BoxDecoration(
             border: Border.all(color: Colors.orange, width: 4),
             shape: BoxShape.circle,
-            image: DecorationImage(
+            image: (picture == null) ? null : DecorationImage(
               fit: BoxFit.fill,
-              image: NetworkImage(picture ?? ''),
+              image: NetworkImage(picture!),
             ),
           ),
         ),
         const SizedBox(height: 24),
         Text('Name: $name'),
         const SizedBox(height: 48),
-        RaisedButton(
+        ElevatedButton(
           onPressed: () async {
             await logoutAction();
           },
