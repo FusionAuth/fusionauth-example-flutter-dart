@@ -9,25 +9,28 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 final FlutterAppAuth appAuth = FlutterAppAuth();
 const FlutterSecureStorage secureStorage = FlutterSecureStorage();
 
-const String FUSION_AUTH_DOMAIN = '1a5321098cb0.ngrok.io';
-const String FUSION_AUTH_CLIENT_ID = '7e3637e8-723a-42d6-9d1d-5cb36128d6f1';
+const String FUSIONAUTH_SCHEME = 'https';
+const String FUSIONAUTH_DOMAIN = '1a5321098cb0.ngrok.io';
+const String FUSIONAUTH_CLIENT_ID = '7e3637e8-723a-42d6-9d1d-5cb36128d6f1';
 
-const String FUSION_AUTH_REDIRECT_URI =
+const String FUSIONAUTH_REDIRECT_URI =
     'com.fusionauth.flutterdemo://login-callback';
-const String FUSION_AUTH_ISSUER = 'https://$FUSION_AUTH_DOMAIN';
+const String FUSIONAUTH_LOGOUT_REDIRECT_URI =
+    'com.fusionauth.flutterdemo://logout-callback';
+const String FUSIONAUTH_ISSUER = '$FUSIONAUTH_SCHEME://$FUSIONAUTH_DOMAIN';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
 
   @override
-  _MyAppState createState() => _MyAppState();
+  MyAppState createState() => MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class MyAppState extends State<MyApp> {
   bool isBusy = false;
   bool isLoggedIn = false;
   String? errorMessage;
@@ -55,7 +58,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<Map<String, dynamic>> getUserDetails(String accessToken) async {
     final http.Response response = await http.get(
-      Uri.https(FUSION_AUTH_DOMAIN, 'oauth2/userinfo'),
+      Uri.parse('$FUSIONAUTH_SCHEME://$FUSIONAUTH_DOMAIN/oauth2/userinfo'),
       headers: <String, String>{'Authorization': 'Bearer $accessToken'},
     );
 
@@ -75,21 +78,22 @@ class _MyAppState extends State<MyApp> {
     try {
       final AuthorizationTokenResponse? result = await appAuth.authorizeAndExchangeCode(
         AuthorizationTokenRequest(
-          FUSION_AUTH_CLIENT_ID,
-          FUSION_AUTH_REDIRECT_URI,
-          issuer: 'https://$FUSION_AUTH_DOMAIN',
-          scopes: <String>['offline_access'],
+          FUSIONAUTH_CLIENT_ID,
+          FUSIONAUTH_REDIRECT_URI,
+          issuer: FUSIONAUTH_ISSUER,
+          scopes: <String>['openid', 'offline_access'],
           // promptValues: ['login']
         ),
       );
       if (result != null) {
-        log('data: $result');
         // final Map<String, Object> idToken = parseIdToken(result.idToken);
         final Map<String, dynamic> profile = await getUserDetails(result.accessToken!);
 
         debugPrint('response: $profile');
         await secureStorage.write(
             key: 'refresh_token', value: result.refreshToken);
+        await secureStorage.write(
+            key: 'id_token', value: result.idToken);
         var gravatar = Gravatar(profile['email']! as String);
         var url = gravatar.imageUrl(
           size: 100,
@@ -128,9 +132,9 @@ class _MyAppState extends State<MyApp> {
 
     try {
       final TokenResponse? response = await appAuth.token(TokenRequest(
-        FUSION_AUTH_CLIENT_ID,
-        FUSION_AUTH_REDIRECT_URI,
-        issuer: FUSION_AUTH_ISSUER,
+        FUSIONAUTH_CLIENT_ID,
+        FUSIONAUTH_REDIRECT_URI,
+        issuer: FUSIONAUTH_ISSUER,
         refreshToken: storedRefreshToken,
       ));
 
@@ -160,7 +164,22 @@ class _MyAppState extends State<MyApp> {
   }
 
   Future<void> logoutAction() async {
-    await secureStorage.delete(key: 'refresh_token');
+    final String? storedIdToken = await secureStorage.read(key: 'id_token');
+    if (storedIdToken == null) {
+      debugPrint(
+          'Could not retrieve id_token for actual logout. Deleting local cookies only...');
+    } else {
+      try {
+        await appAuth.endSession(EndSessionRequest(
+            idTokenHint: storedIdToken,
+            postLogoutRedirectUrl: FUSIONAUTH_LOGOUT_REDIRECT_URI,
+            issuer: FUSIONAUTH_ISSUER,
+            allowInsecureConnections: FUSIONAUTH_SCHEME != 'https'));
+      } catch (err) {
+        debugPrint('logout error: $err');
+      }
+    }
+    await secureStorage.deleteAll();
     setState(() {
       isLoggedIn = false;
       isBusy = false;
