@@ -32,7 +32,7 @@ dependencies:
   flutter:
     sdk: flutter
   http: ^0.13.6
-  flutter_appauth: ^5.0.0
+  flutter_appauth: ^6.0.0
   flutter_secure_storage: ^8.0.0
   simple_gravatar: ^1.1.0
 
