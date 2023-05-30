@@ -9,9 +9,14 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 final FlutterAppAuth appAuth = FlutterAppAuth();
 const FlutterSecureStorage secureStorage = FlutterSecureStorage();
 
+/// For a real-world app, this should be an Internet-facing URL to FusionAuth.
+/// If you are running FusionAuth locally and just want to test the app, you can
+/// specify a local IP address (if the device is connected to the same network
+/// as the computer running FusionAuth) or even use ngrok to expose your
+/// instance to the Internet temporarily.
+const String FUSIONAUTH_DOMAIN = 'your-fusionauth-public-url';
 const String FUSIONAUTH_SCHEME = 'https';
-const String FUSIONAUTH_DOMAIN = '1a5321098cb0.ngrok.io';
-const String FUSIONAUTH_CLIENT_ID = '7e3637e8-723a-42d6-9d1d-5cb36128d6f1';
+const String FUSIONAUTH_CLIENT_ID = 'e9fdb985-9173-4e01-9d73-ac2d60d1dc8e';
 
 const String FUSIONAUTH_REDIRECT_URI =
     'com.fusionauth.flutterdemo://login-callback';
