@@ -48,7 +48,7 @@
             <string>Editor</string>
             <key>CFBundleURLSchemes</key>
             <array>
-                <string>com.fusionauth.flutterdemo://login-callback</string>
+                <string>com.fusionauth.flutterdemo</string>
             </array>
         </dict>
     </array>
