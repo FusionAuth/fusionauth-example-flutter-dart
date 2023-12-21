@@ -1,3 +1,5 @@
+**This repo is out of date and is archived. Check out [an updated tutorial on using FusionAuth with Flutter](https://fusionauth.io/docs/quickstarts/quickstart-flutter-native) or [the updated GitHub repository](https://github.com/FusionAuth/fusionauth-quickstart-flutter-native).**
+
 # fusionauth_demo
 
 A new Flutter project.
